@@ -9,7 +9,9 @@ create table department (
     primary key(id)
 ); 
 
-create table role (
+ select * from department; 
+ 
+create table roles (
 	id INT not null, 
     title varchar(30), 
     salary decimal(8,2),
@@ -18,8 +20,10 @@ create table role (
     primary key(id)
 );
 
+ select * from roles; 
+ 
 create table employee (
-	id INT not null, 
+	id INT AUTO_INCREMENT NOT NULL, 
     first_name varchar(30), 
     last_name varchar(30), 
     role_id INT, 
