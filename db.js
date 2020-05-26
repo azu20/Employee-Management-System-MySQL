@@ -19,8 +19,7 @@ module.exports = (() => {
     })
   }
 
-  funct
-  ion viewDepartments() {
+  function viewDepartments() {
      
     const selectDepartments = 
       
