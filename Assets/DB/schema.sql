@@ -1,6 +1,9 @@
+DROP DATABASE if EXISTS Employee_tracker_db;
+
 create database	Employee_tracker_db; 
 
 use Employee_tracker_db; 
+
 
 create table department (
 	id INT not null, 
