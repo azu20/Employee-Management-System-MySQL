@@ -12,45 +12,36 @@ async function runPrompts() {
             type: "rawlist",
             message: "What would you like to do?",
             choices: [
-                "View Departments",
-                "View Roles",
-                "View Employees",
-                "View Employees by Manager",
+                "View Departments", 
                 "Add Departments",
-                "Add Employee Role",
-                "Add New Employee",
-                "Update Employee Role",
-                "Update Employee Manager",
                 "Delete Department",
-                "Delete Employee Role",
-                "Delete Employee",
+                "View All Employees",
+                "View Employees by Department",
+                "View Employees by Manager",
+                "Update Employee Manager",
+                "Add Employee",
+                "Remove Employee",
+                "View All Roles",
+                "Add Employee Role",
+                "Update Employee Role", 
+                "Remove Employee Role",
                 "View current salary budget by department"
             ]
         })
         .then(function (answer) {
             switch (answer.action) {
                 case "View Departments":
-                    deptSearch();
+                    viewDepartments();
                     break;
-                case "View Roles":
+                case "View All Roles":
                     viewRole();
                     break;
-                case "View Employees":
+                case "View All Employees":
                     viewEmployees();
                     break;
                 case "View Employees by Manager":
                     viewERbyMngr();
-                    break;
-                // "Add Departments",
-                // "Add Employee Role",
-                // "Add New Employee",
-                // "Update Employee Role",
-                // "Update Employee Manager",
-                // "Delete Department",
-                // "Delete Employee Role",
-                // "Delete Employee",
-                // "View current salary budget by department"        
-
+                    break;     
 
             }
         });
@@ -60,3 +51,6 @@ function viewEmployees() {
     console.log(dbManager.viewEmployees());
 }
 
+function viewDepartments() {
+    console.log(dbManager.viewDepartments());
+};

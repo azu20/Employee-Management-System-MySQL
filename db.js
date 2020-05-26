@@ -8,7 +8,7 @@ module.exports = (() => {
     port: 3306,
     user: "root",
     password: "New2020ya$!",
-    database: "Employee_tracker_db"
+    database: "employee_tracker_db"
   });
 
   const connect = (query) => {
@@ -19,13 +19,41 @@ module.exports = (() => {
     })
   }
 
-  // HERE
-
-
-  //
+  funct
+  ion viewDepartments() {
+     
+    const selectDepartments = 
+      
+      `
+      select * from department; 
+     
+      `
+      const resultsHandler = (err, res) => {
+        if (err) throw err;
+  
+        let resArray = Array.from([]);
+  
+        for (const record of res) {
+          const viewObject = {
+            departmentName: record.dept_name 
+          }
+          // Add condensed object to our return array 
+          resArray.push(viewObject);
+        } //end for loop
+  
+        return resArray;
+  
+      }
+  
+      const executer = () => { connection.query(selectDepartments, resultsHandler) }
+      return connect(executer);
+      
+  };
 
   function viewEmployees() {
+
     const selectEmployees =
+
       `
       select d.dept_name, r.title, r.salary, x.*
       from department as d
@@ -45,7 +73,8 @@ module.exports = (() => {
      ) as x on r.id = x.MangerRoleId
                                  
        ORDER BY d.dept_name DESC; 
-    `
+
+      `
     // RowDataPacket {
     //     dept_name: 'Research & Development',
     //     title: 'Data Scientist Manager',
@@ -73,7 +102,7 @@ module.exports = (() => {
           employeeName: record.employeeFirstName + " " + record.employeeLastName,
           employeeRole: record.employeeRole,
           employeeManager: record.ManagerFirstName + " " + record.managerLastName,
-          employeeDept: record.dept_name,
+          employeeDept: record.dept_name
         }
         // Add condensed object to our return array 
         resArray.push(viewObject);
@@ -85,15 +114,15 @@ module.exports = (() => {
 
     const executer = () => { connection.query(selectEmployees, resultsHandler) }
     return connect(executer);
+
   }
 
   return {
-    "viewEmployees": viewEmployees
+    "viewEmployees": viewEmployees,
+    "viewDepartments": viewDepartments 
   }
 
 })()
-
-
 
 
 // function queryAllSongs() {
