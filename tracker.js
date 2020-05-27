@@ -12,19 +12,12 @@ async function runPrompts() {
       message: "What would you like to do?",
       choices: [
         "View Departments",
-        "Add Departments",
-        "Delete Department",
-        "View All Employees",
-        "View Employees by Department",
-        "View Employees by Manager",
-        "Update Employee Manager",
+        "View Employees",
+        "View Roles",
+        "Add Department",
         "Add Employee",
-        "Remove Employee",
-        "View All Roles",
-        "Add Employee Role",
+        "Add Role",
         "Update Employee Role",
-        "Remove Employee Role",
-        "View current salary budget by department",
       ],
     })
     .then(function (answer) {
@@ -32,17 +25,20 @@ async function runPrompts() {
         case "View Departments":
           viewDepartments();
           break;
-        case "View All Roles":
-          viewRole();
-          break;
-        case "View All Employees":
+        case "View Employees":
           viewEmployees();
           break;
-        case "View Employees by Manager":
-          viewERbyMngr();
+        case "View Roles":
+          viewRoles();
           break;
-        case "Add Departments":
+        case "Add Department":
           addDepartment();
+          break;
+        case "Add Role":
+          addRole();
+          break;
+        case "Add Employee":
+          addEmployee();
           break;
         case "Update Employee Role":
           updateEmployeeRole();
@@ -51,18 +47,70 @@ async function runPrompts() {
     });
 }
 
+function showData(result) {
+  console.table(result);
+  runPrompts();
+}
+
+
+function viewDepartments() {
+  dbManager.viewDepartments(showData);
+}
+
+function viewEmployees() {
+  dbManager.viewEmployees(showData);
+}
+
+function viewRoles() {
+  dbManager.viewRoles(showData);
+}
+
 async function addDepartment() {
   await inquirer
     .prompt({
-      name: "departmentName",
+      name: "name",
       type: "input",
       message: "Name of the department?",
     })
     .then((r) => {
-      dbManager.addDepartment(r.addDepartment, (dbResult) =>
+      dbManager.addDepartment(r.name, (dbResult) =>
         console.table(dbResult)
       );
     })
+    .then(() => runPrompts());
+}
+
+async function addEmployee() {
+  await inquirer
+    .prompt({
+      name: "name",
+      type: "input",
+      message: "Name of the employee?",
+    })
+    .then(async (r) => {
+      const employee = r.name;
+      let departments = Array.from([]);
+
+      await dbManager.viewDepartments((data) => {
+
+        departments = Array.from(data);
+      });
+      console.log("data is:       ");
+      console.log(departments);
+
+      // const result = await inquirer.prompt({
+      //   name: "department",
+      //   type: "list",
+      //   message: `What department will ${employeeName} be in?`,
+      //    choices: ??,
+      // });
+
+    })
+    // .then(() => {
+    //    dbManager.addEmployee(r.name, (dbResult) =>
+    //      console.table(dbResult)
+    //    );
+    // })
     .then(() => runPrompts());
 }
 
@@ -97,7 +145,10 @@ async function listEmployees(results) {
         message: `What role do you want to for ${e.employee} ?`,
         choices: rolesArray,
       });
-      return { role: role.role, employee: employee };
+      return {
+        role: role.role,
+        employee: employee
+      };
     })
     .then((x) => {
       // console.log(r);
@@ -106,16 +157,4 @@ async function listEmployees(results) {
       });
     })
     .then(() => runPrompts());
-}
-
-function viewEmployees() {
-  dbManager.viewEmployees(showEmployees);
-}
-function showEmployees(result) {
-  console.table(result);
-  runPrompts();
-}
-
-function viewDepartments() {
-  dbManager.viewDepartments();
 }
