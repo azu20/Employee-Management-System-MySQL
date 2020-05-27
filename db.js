@@ -1,4 +1,10 @@
 const mysql = require("mysql");
+const {
+  promisify
+} = require('util');
+
+// const mysqlConnect = promisify(mysql.createConnection);
+
 const PASSWORD = "New2020ya$!";
 
 module.exports = (() => {
@@ -21,8 +27,8 @@ module.exports = (() => {
                 manager.role_id AS "MangerRoleId",
                 manager.id AS "ManagerId"
         FROM employee AS emp
-        JOIN employee AS manager ON manager.id = emp.manager_id -- where manager.id <> emp.id
-
+        JOIN employee AS manager ON manager.id = emp.manager_id 
+        -- where manager.id <> emp.id
         ORDER BY manager.id) x
       INNER JOIN roles AS managerRole ON managerRole.id = x.MangerRoleId
       INNER JOIN roles AS employeeRole ON employeeRole.id = x.employeeRoleID
@@ -39,26 +45,30 @@ module.exports = (() => {
       password: PASSWORD,
       database: "employee_tracker_db",
     });
-    connection.connect((err) => {
+
+
+    connection.connect(async (err) => {
       if (err) throw err;
 
-      connection.query(
-        `select id from roles where title = '${role}'`,
-        (err, selectResponse) => {
+      const runQuery = promisify(connection.query.bind(connection));
+
+      // connection.query(
+      runQuery(`select id from roles where title = '${role}'`)
+        .then((err, selectResponse) => {
           if (err) throw err;
-
           const id = selectResponse[0].id;
-
-          connection.query(
-            `update employee set role_id = ${id} where concat(first_name,' ',last_name) = '${employeeName}' ;`,
-            (err, updateResponse) => {
+          return id;
+        })
+        .then((id) => {
+          runQuery(`update employee set role_id = ${id} where concat(first_name,' ',last_name) = '${employeeName}' ;`)
+            .then((err, updateResponse) => {
               if (err) throw err;
               whoToCallWhenDone(updateResponse);
               connection.end();
-            }
-          );
-        }
-      );
+            })
+            .catch((err) => console.log('ERROR:', err));
+        })
+        .catch((err) => console.log('ERROR:', err));
     });
   }
 
@@ -88,7 +98,7 @@ module.exports = (() => {
     });
   }
 
-  function addEmployee(employeeName, whoToCallWhenDone) {
+  async function addEmployee(employeeName, manager_id, role_id, whoToCallWhenDone) {
     const connection = mysql.createConnection({
       host: "localhost",
       port: 3306,
@@ -96,23 +106,33 @@ module.exports = (() => {
       password: PASSWORD,
       database: "employee_tracker_db",
     });
-    connection.connect((err) => {
-      if (err) throw err;
-      // console.log("connected as id " + connection.threadId);
+    const connect = promisify(connection.connect.bind(connection));
 
-      connection.query(`insert into employee`, (err, res) => {
-        if (err) throw err;
-
-        whoToCallWhenDone({
-          DepartmentName: departmentName,
-          id: res.insertId
-        });
-        connection.end();
-      });
-    });
+    const output = await connect()
+      .then(async () => {
+        const runQuery = promisify(connection.query.bind(connection));
+        let name = employeeName.split(' '); //bad logic
+        if (name.size != 2) {
+          name[0] = employeeName;
+          name[1] = "";
+        }
+        const result =
+          await runQuery(`
+          INSERT INTO employee(first_name, last_name, role_id, manager_id)
+          VALUES('${name[0]}', '${name[1]}', ${role_id}, ${manager_id})
+          `)
+          .then(async res => {
+            return res;
+          })
+          .catch(err => console.log("error", err));
+        return result;
+      })
+      .catch(err => console.log("error", err));
+    connection.end();
+    whoToCallWhenDone(output);
   }
 
-  function viewEmployees(whoToCallWhenDone) {
+  async function viewEmployees(whoToCallWhenDone) {
     const connection = mysql.createConnection({
       host: "localhost",
       port: 3306,
@@ -120,35 +140,44 @@ module.exports = (() => {
       password: PASSWORD,
       database: "employee_tracker_db",
     });
-    connection.connect((err) => {
-      if (err) throw err;
-      // console.log("connected as id " + connection.threadId);
+    const connect = promisify(connection.connect.bind(connection));
 
-      connection.query(selectEmployees, (err, res) => {
-        if (err) throw err;
+    const output = await connect()
+      .then(async () => {
+        const runQuery = promisify(connection.query.bind(connection));
+        const result = await runQuery(selectEmployees)
+          .then((res) => {
 
-        const resArray = Array.from([]);
-        for (const record of res) {
-          const viewObject = {
-            // employeeID: record.EmployeeID,
-            employeeName: record.employeeFirstName + " " + record.employeeLastName,
-            employeeRole: record.employeeTitle,
-            // managerRole: record.managerTitle,
-            employeeSalary: record.salary,
-            employeeManager: record.ManagerFirstName + " " + record.managerLastName,
-            employeeDept: record.employeeDepartment,
-          };
-          // Add condensed object to our return array
-          resArray.push(viewObject);
-        } //end for loop
-
-        whoToCallWhenDone(resArray);
-        connection.end();
+            const resArray = Array.from([]);
+            for (const record of res) {
+              const viewObject = {
+                Id: record.EmployeeID,
+                employeeName: record.employeeFirstName + " " + record.employeeLastName,
+                employeeRole: record.employeeTitle,
+                // managerRole: record.managerTitle,
+                employeeSalary: record.salary,
+                employeeManager: record.ManagerFirstName + " " + record.managerLastName,
+                managerId: record.ManagerId,
+                employeeDept: record.employeeDepartment,
+              };
+              // Add condensed object to our return array
+              resArray.push(viewObject);
+            } //end for loop
+            connection.end();
+            return resArray;
+          })
+          .catch(err => console.log("error", err));
+        return result;
+      })
+      .catch((err) => {
+        console.log("error", err);
       });
-    });
+
+    whoToCallWhenDone(output);
+
   }
 
-  function viewDepartments(whoToCallWhenDone) {
+  async function viewDepartments(whoToCallWhenDone) {
     const connection = mysql.createConnection({
       host: "localhost",
       port: 3306,
@@ -156,30 +185,34 @@ module.exports = (() => {
       password: PASSWORD,
       database: "employee_tracker_db",
     });
-    connection.connect((err) => {
-      if (err) throw err;
-      // console.log("connected as id " + connection.threadId);
+    const connect = promisify(connection.connect.bind(connection));
 
-      connection.query(`select * from department;`, (err, res) => {
-        if (err) throw err;
-
-        const resArray = Array.from([]);
-
-        for (const record of res) {
-          const viewObject = {
-            departmentName: record.dept_name,
-          };
-          // Add condensed object to our return array
-          resArray.push(viewObject);
-        } //end for loop
-
-        whoToCallWhenDone(resArray);
-        connection.end();
-      });
-    });
+    const output = await connect()
+      .then(async () => {
+        const runQuery = promisify(connection.query.bind(connection));
+        const result = await runQuery(`select * from department;`)
+          .then((res) => {
+            const resArray = Array.from([]);
+            for (const record of res) {
+              const viewObject = {
+                departmentId: record.id,
+                departmentName: record.dept_name,
+              };
+              resArray.push(viewObject);
+            }
+            connection.end();
+            return resArray;
+          })
+          .catch(err => console.log("error", err));
+        return result;
+      })
+      .catch((err) =>
+        console.log("ERROR executing query", err)
+      );
+    whoToCallWhenDone(output);
   }
 
-  function viewRoles(whoToCallWhenDone) {
+  async function viewRoles(whoToCallWhenDone) {
     const connection = mysql.createConnection({
       host: "localhost",
       port: 3306,
@@ -187,29 +220,31 @@ module.exports = (() => {
       password: PASSWORD,
       database: "employee_tracker_db",
     });
-    connection.connect((err) => {
-      if (err) throw err;
-      // console.log("connected as id " + connection.threadId);
-
-      connection.query(`select r.title,r.salary,d.dept_name from roles as r join department as d on d.id=r.department_id;`, (err, res) => {
-        if (err) throw err;
-
-        const resArray = Array.from([]);
-
-        for (const record of res) {
-          const viewObject = {
-            roleName: record.title,
-            roleSalary: record.salary,
-            departmentName: record.dept_name
-          };
-          // Add condensed object to our return array
-          resArray.push(viewObject);
-        } //end for loop
-
-        whoToCallWhenDone(resArray);
-        connection.end();
-      });
-    });
+    const connect = promisify(connection.connect.bind(connection));
+    const output = await connect()
+      .then(async () => {
+        const runQuery = promisify(connection.query.bind(connection));
+        const result = await runQuery(`select r.id as roleId,r.title,r.salary,d.dept_name,d.id as dept_id from roles as r join department as d on d.id=r.department_id;`)
+          .then(async (res) => {
+            const resArray = Array.from([]);
+            for (const record of res) {
+              const viewObject = {
+                roleId: record.roleId,
+                roleName: record.title,
+                roleSalary: record.salary,
+                departmentName: record.dept_name,
+                departmentId: record.dept_id,
+              };
+              resArray.push(viewObject);
+            }
+            connection.end();
+            return resArray;
+          })
+          .catch(err => console.log("error", err));
+        return result;
+      })
+      .catch(err => console.log("error  ", err));
+    whoToCallWhenDone(output);
   }
 
 

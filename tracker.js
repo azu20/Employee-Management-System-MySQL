@@ -1,6 +1,13 @@
 const dbManager = require("./db.js");
 const inquirer = require("inquirer");
 const cTable = require("console.table");
+const {
+  promisify
+} = require('util');
+
+const getEmployees = promisify(dbManager.viewEmployees);
+const getRoles = promisify(dbManager.viewRoles);
+const saveEmployee = promisify(dbManager.addEmployee);
 
 runPrompts();
 
@@ -79,37 +86,75 @@ async function addDepartment() {
 }
 
 async function addEmployee() {
-  await inquirer
+  const name = await inquirer
     .prompt({
       type: `input`,
       name: `name`,
       message: `Name of the employee?`,
     })
-    .then(async (r) => {
-      const employee = r.name;
-      let departments = Array.from([]);
+    .then((r) => r.name);
 
-      await dbManager.viewDepartments((data) => {
+  const roles = await getRoles()
+    .then(data => data)
+    .catch((err) => err);
 
-        departments = Array.from(data);
-      });
-      console.log("data is:       ");
-      console.log(departments);
+  const departments = new Set();
+  roles.forEach((x) => departments.add(x.departmentName));
 
-      // const result = await inquirer.prompt({
-      //   name: "department",
-      //   type: "list",
-      //   message: `What department will ${employeeName} be in?`,
-      //    choices: ??,
-      // });
-
+  const selectedDepartment = await inquirer
+    .prompt({
+      name: "department",
+      type: "rawlist",
+      message: `In which department will '${name}' work in?`,
+      choices: Array.from(departments),
     })
-    // .then(() => {
-    //    dbManager.addEmployee(r.name, (dbResult) =>
-    //      console.table(dbResult)
-    //    );
-    // })
-    .then(() => runPrompts());
+    .then((r) => {
+      return r.department;
+    });
+
+  const employees = await getEmployees()
+    .then(data => data)
+    .catch((err) => err);
+
+  const selectedManager = await inquirer
+    .prompt({
+      name: "manager",
+      type: "rawlist",
+      message: `Who will be '${name}'s manager?`,
+      choices: employees.filter(x => x.employeeDept === selectedDepartment).map(x => x.employeeName),
+    })
+    .then((r) => {
+      console.log(r);
+      return r.manager;
+    });
+
+  const availableRolesInSelectedDepartment = roles.filter(x => x.departmentName === selectedDepartment);
+
+  const selectedRole = await inquirer
+    .prompt({
+      name: "role",
+      type: "list",
+      message: `What role will '${name}' have while working in '${selectedDepartment}'?`,
+      choices: availableRolesInSelectedDepartment.map(x => x.roleName),
+    })
+    .then((r) => r.role);
+
+  const selectedManagerId =
+    employees.filter(x => x.employeeDept === selectedDepartment).filter(x => x.employeeName === selectedManager)[0].managerId;
+
+  const selectedRoleId = roles.filter(x => x.roleName === selectedRole)[0].roleId;
+
+  const result = await saveEmployee(name, selectedManagerId, selectedRoleId)
+    .then(data => data)
+    .catch((err) => err);
+
+
+  await console.table({
+    employeeId: result.insertId,
+    message: result.message,
+  });
+
+  runPrompts();
 }
 
 function updateEmployeeRole() {
