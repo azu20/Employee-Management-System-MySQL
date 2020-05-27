@@ -8,6 +8,8 @@ const {
 const getEmployees = promisify(dbManager.viewEmployees);
 const getRoles = promisify(dbManager.viewRoles);
 const saveEmployee = promisify(dbManager.addEmployee);
+const saveEmployeeRole = promisify(dbManager.updateEmployeeRole);
+
 
 runPrompts();
 
@@ -23,7 +25,8 @@ async function runPrompts() {
         `Add Department`,
         `Add Employee`,
         `Add Role`,
-        `Update Employee Role`],
+        `Update Employee Role`
+      ],
     })
     .then(function (answer) {
       switch (answer.action) {
@@ -78,9 +81,10 @@ async function addDepartment() {
       message: `Name of the department?`,
     })
     .then((r) => {
-      dbManager.addDepartment(r.name, (dbResult) =>
-        console.table(dbResult)
-      );
+      dbManager.addDepartment(r.name, async (dbResult) =>
+        await console.table({
+          departmentId: dbResult.id
+        }));
     })
     .then(() => runPrompts());
 }
@@ -173,7 +177,7 @@ async function listEmployees(results) {
   }
   const rolesArray = Array.from(rolesSet);
 
-  await inquirer
+  const result = await inquirer
     .prompt({
       type: `list`,
       name: `employee`,
@@ -193,11 +197,13 @@ async function listEmployees(results) {
         employee: employee
       };
     })
-    .then((x) => {
-      // console.log(r);
-      dbManager.updateEmployeeRole(x.employee, x.role, (dbresponse) => {
-        // console.table(dbresponse);
-      });
+    .then(async (x) => {
+      await saveEmployeeRole(x.employee, x.role)
+        .then(d => d)
+        .catch(err => console.log("error", err));
     })
-    .then(() => runPrompts());
+    .catch(err => console.log("error", err));
+
+  await console.table(result);
+  runPrompts();
 }

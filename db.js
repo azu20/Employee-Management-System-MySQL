@@ -37,7 +37,7 @@ module.exports = (() => {
       ORDER BY x.managerLastName DESC;
       `;
 
-  function updateEmployeeRole(employeeName, role, whoToCallWhenDone) {
+  async function updateEmployeeRole(employeeName, role, whoToCallWhenDone) {
     const connection = mysql.createConnection({
       host: "localhost",
       port: 3306,
@@ -45,31 +45,29 @@ module.exports = (() => {
       password: PASSWORD,
       database: "employee_tracker_db",
     });
+    const connect = promisify(connection.connect.bind(connection));
 
-
-    connection.connect(async (err) => {
-      if (err) throw err;
-
-      const runQuery = promisify(connection.query.bind(connection));
-
-      // connection.query(
-      runQuery(`select id from roles where title = '${role}'`)
-        .then((err, selectResponse) => {
-          if (err) throw err;
-          const id = selectResponse[0].id;
-          return id;
-        })
-        .then((id) => {
-          runQuery(`update employee set role_id = ${id} where concat(first_name,' ',last_name) = '${employeeName}' ;`)
-            .then((err, updateResponse) => {
-              if (err) throw err;
-              whoToCallWhenDone(updateResponse);
-              connection.end();
-            })
-            .catch((err) => console.log('ERROR:', err));
-        })
-        .catch((err) => console.log('ERROR:', err));
-    });
+    const output =
+      await connect()
+      .then(async () => {
+        const runQuery = promisify(connection.query.bind(connection));
+        const response =
+          await runQuery(`select id from roles where title = '${role}'`)
+          .then((selectResponse) => {
+            const id = selectResponse[0].id;
+            return id;
+          })
+          .then(async (id) => {
+            await runQuery(`update employee set role_id = ${id} where concat(first_name,' ',last_name) = '${employeeName}' ;`)
+              .then((updateResponse) => updateResponse)
+              .catch((err) => console.log('ERROR:', err));
+          })
+          .catch((err) => console.log('ERROR:', err));
+        return response;
+      })
+      .catch(err => console.log("error", err));
+    connection.end();
+    whoToCallWhenDone(output);
   }
 
   function addDepartment(departmentName, whoToCallWhenDone) {
