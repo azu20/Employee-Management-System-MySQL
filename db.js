@@ -79,7 +79,34 @@ module.exports = (() => {
       connection.query(addDepartmentSql, (err, res) => {
         if (err) throw err;
 
-        whoToCallWhenDone({ DepartmentName: departmentName, id: res.insertId });
+        whoToCallWhenDone({
+          DepartmentName: departmentName,
+          id: res.insertId
+        });
+        connection.end();
+      });
+    });
+  }
+
+  function addEmployee(employeeName, whoToCallWhenDone) {
+    const connection = mysql.createConnection({
+      host: "localhost",
+      port: 3306,
+      user: "root",
+      password: PASSWORD,
+      database: "employee_tracker_db",
+    });
+    connection.connect((err) => {
+      if (err) throw err;
+      // console.log("connected as id " + connection.threadId);
+
+      connection.query(`insert into employee`, (err, res) => {
+        if (err) throw err;
+
+        whoToCallWhenDone({
+          DepartmentName: departmentName,
+          id: res.insertId
+        });
         connection.end();
       });
     });
@@ -104,13 +131,11 @@ module.exports = (() => {
         for (const record of res) {
           const viewObject = {
             // employeeID: record.EmployeeID,
-            employeeName:
-              record.employeeFirstName + " " + record.employeeLastName,
+            employeeName: record.employeeFirstName + " " + record.employeeLastName,
             employeeRole: record.employeeTitle,
             // managerRole: record.managerTitle,
             employeeSalary: record.salary,
-            employeeManager:
-              record.ManagerFirstName + " " + record.managerLastName,
+            employeeManager: record.ManagerFirstName + " " + record.managerLastName,
             employeeDept: record.employeeDepartment,
           };
           // Add condensed object to our return array
@@ -123,31 +148,79 @@ module.exports = (() => {
     });
   }
 
+  function viewDepartments(whoToCallWhenDone) {
+    const connection = mysql.createConnection({
+      host: "localhost",
+      port: 3306,
+      user: "root",
+      password: PASSWORD,
+      database: "employee_tracker_db",
+    });
+    connection.connect((err) => {
+      if (err) throw err;
+      // console.log("connected as id " + connection.threadId);
+
+      connection.query(`select * from department;`, (err, res) => {
+        if (err) throw err;
+
+        const resArray = Array.from([]);
+
+        for (const record of res) {
+          const viewObject = {
+            departmentName: record.dept_name,
+          };
+          // Add condensed object to our return array
+          resArray.push(viewObject);
+        } //end for loop
+
+        whoToCallWhenDone(resArray);
+        connection.end();
+      });
+    });
+  }
+
+  function viewRoles(whoToCallWhenDone) {
+    const connection = mysql.createConnection({
+      host: "localhost",
+      port: 3306,
+      user: "root",
+      password: PASSWORD,
+      database: "employee_tracker_db",
+    });
+    connection.connect((err) => {
+      if (err) throw err;
+      // console.log("connected as id " + connection.threadId);
+
+      connection.query(`select r.title,r.salary,d.dept_name from roles as r join department as d on d.id=r.department_id;`, (err, res) => {
+        if (err) throw err;
+
+        const resArray = Array.from([]);
+
+        for (const record of res) {
+          const viewObject = {
+            roleName: record.title,
+            roleSalary: record.salary,
+            departmentName: record.dept_name
+          };
+          // Add condensed object to our return array
+          resArray.push(viewObject);
+        } //end for loop
+
+        whoToCallWhenDone(resArray);
+        connection.end();
+      });
+    });
+  }
+
+
+
   return {
+    viewDepartments: viewDepartments,
     viewEmployees: viewEmployees,
+    viewRoles: viewRoles,
     addDepartment: addDepartment,
+    addEmployee: addEmployee,
     updateEmployeeRole: updateEmployeeRole,
+
   };
 })();
-
-// function queryAllSongs() {
-//   connection.query("SELECT * FROM songs", function (err, res) {
-//     if (err) throw err;
-//     for (var i = 0; i < res.length; i++) {
-//       console.log(res[i].id + " | " + res[i].title + " | " + res[i].artist + " | " + res[i].genre);
-//     }
-//     console.log("-----------------------------------");
-//   });
-// }
-
-// function queryDanceSongs() {
-//   var query = connection.query("SELECT * FROM songs WHERE genre=?", ["Dance"], function (err, res) {
-//     if (err) throw err;
-//     for (var i = 0; i < res.length; i++) {
-//       console.log(res[i].id + " | " + res[i].title + " | " + res[i].artist + " | " + res[i].genre);
-//     }
-
-//     logs the actual query being run
-//     console.log(query.sql);
-//     connection.end();
-//   }
