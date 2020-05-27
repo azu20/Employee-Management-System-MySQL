@@ -218,9 +218,9 @@ module.exports = (() => {
     viewDepartments: viewDepartments,
     viewEmployees: viewEmployees,
     viewRoles: viewRoles,
-    addDepartment: addDepartment,
-    addEmployee: addEmployee,
-    updateEmployeeRole: updateEmployeeRole,
+    addDepartment: addDepartment, //not working
+    addEmployee: addEmployee, // not working
+    updateEmployeeRole: updateEmployeeRole, // working just modify the output - hide raw data package. 
 
   };
 })();

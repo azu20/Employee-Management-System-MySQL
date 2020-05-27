@@ -7,18 +7,16 @@ runPrompts();
 async function runPrompts() {
   await inquirer
     .prompt({
-      name: "action",
-      type: "list",
-      message: "What would you like to do?",
-      choices: [
-        "View Departments",
-        "View Employees",
-        "View Roles",
-        "Add Department",
-        "Add Employee",
-        "Add Role",
-        "Update Employee Role",
-      ],
+      type: `list`,
+      name: `action`,
+      message: `What would you like to do?`,
+      choices: [`View Departments`,
+        `View Employees`,
+        `View Roles`,
+        `Add Department`,
+        `Add Employee`,
+        `Add Role`,
+        `Update Employee Role`],
     })
     .then(function (answer) {
       switch (answer.action) {
@@ -68,9 +66,9 @@ function viewRoles() {
 async function addDepartment() {
   await inquirer
     .prompt({
-      name: "name",
-      type: "input",
-      message: "Name of the department?",
+      type: `input`,
+      name: `name`,
+      message: `Name of the department?`,
     })
     .then((r) => {
       dbManager.addDepartment(r.name, (dbResult) =>
@@ -83,9 +81,9 @@ async function addDepartment() {
 async function addEmployee() {
   await inquirer
     .prompt({
-      name: "name",
-      type: "input",
-      message: "Name of the employee?",
+      type: `input`,
+      name: `name`,
+      message: `Name of the employee?`,
     })
     .then(async (r) => {
       const employee = r.name;
@@ -132,16 +130,16 @@ async function listEmployees(results) {
 
   await inquirer
     .prompt({
-      name: "employee",
-      type: "list",
-      message: "Which employee do you want to update?",
+      type: `list`,
+      name: `employee`,
+      message: `Which employee do you want to update?`,
       choices: employees,
     })
     .then(async (e) => {
       const employee = e.employee;
       const role = await inquirer.prompt({
-        name: "role",
-        type: "list",
+        type: `list`,
+        name: `role`,
         message: `What role do you want to for ${e.employee} ?`,
         choices: rolesArray,
       });
@@ -153,7 +151,7 @@ async function listEmployees(results) {
     .then((x) => {
       // console.log(r);
       dbManager.updateEmployeeRole(x.employee, x.role, (dbresponse) => {
-        console.table(dbresponse);
+        // console.table(dbresponse);
       });
     })
     .then(() => runPrompts());
