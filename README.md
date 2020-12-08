@@ -19,7 +19,9 @@ So that I can organize and plan my business.
   * Download MySQL NPM pakage type command:  npm install mysql
 
   * On the db.js file, enter your database password on line #2: const PASSWORD = "yourpasswordhere"; 
-  
+
+  * To Start: type the following on your console: nodemon tracker.js
+    
   * ![Video](https://j.gifs.com/E8LMRg.gif "How to video")
 
 
