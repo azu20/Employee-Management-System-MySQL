@@ -1,6 +1,12 @@
 
 # MySQL: Employee Tracker
 
+* <img src="https://img.shields.io/badge/github%20-%23121011.svg?&style=for-the-badge&logo=github&logoColor=white"/>
+
+* <img src="https://img.shields.io/badge/javascript%20-%23323330.svg?&style=for-the-badge&logo=javascript&logoColor=%23F7DF1E"/>
+
+*	<img src="https://img.shields.io/badge/node.js%20-%2343853D.svg?&style=for-the-badge&logo=node.js&logoColor=white"/>
+
 ## About: (Command-line App)
 
  Developers are often tasked with creating interfaces that make it easy for non-developers to view and interact with information stored in databases. Often these interfaces are known as **C**ontent **M**anagement **S**ystems. This command-line interface will architect and build a solution for managing a company's employees using node, inquirer, and MySQL.
@@ -21,7 +27,7 @@ So that I can organize and plan my business.
   * On the db.js file, enter your database password on line #2: const PASSWORD = "yourpasswordhere"; 
 
   * To Start: type the following on your console: nodemon tracker.js
-    
+
   * ![Video](https://j.gifs.com/E8LMRg.gif "How to video")
 
 
@@ -38,4 +44,8 @@ This is a command-line application that allows the user to:
   * This command-line application uses the following DB shema: 
   
   ![Database Schema](Assets/schema.png)
+
+* [![npm version](https://badge.fury.io/js/npm.svg)](https://badge.fury.io/js/npm)
+
+* [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
